@@ -9,7 +9,7 @@ def client():
     return TestClient(app)
 
 
-input_json_file = "feature_eng/cvas_data.json"
+input_json_file = "data/cvas_data.json"
 
 
 def test_feature_engineering_customers(client: TestClient): #
