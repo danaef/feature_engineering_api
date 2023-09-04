@@ -12,12 +12,12 @@ def client():
 input_json_file = "feature_eng/cvas_data.json"
 
 
-def test_feature_engineering_customers(client: TestClient):
-    response = client.post("/feature-engineering/customers")  # Send the data as JSON
-    assert response.status_code == 200
+def test_feature_engineering_customers(client: TestClient): #
+    response = client.post("/feature-engineering/customers")  #performs the action being tests
+    assert response.status_code == 200  #testing that request was successful
     response_data = response.json()
-    first_customer_features = response_data[0]
-    expected_first_customer_features = {
+    first_customer_features = response_data[0]   #getting ready to test first customer's features
+    expected_first_customer_features = {   #manually computed values to compare with the returned
         "customer_ID": 1090,
         "annual_income": 41333,
         "COUNT(loans)": 1,
@@ -35,16 +35,15 @@ def test_feature_engineering_customers(client: TestClient):
         "PERCENT_TRUE(loans.short_term)": 0
     }
 
-    # Compare the computed features for customer 1436 with the expected features
-    assert first_customer_features == expected_first_customer_features
+    assert first_customer_features == expected_first_customer_features #testing if dicts are the same
 
 
 def test_feature_engineering_loans(client: TestClient):
-    response = client.post("/feature-engineering/loans")  # Send the data as JSON
-    assert response.status_code == 200
+    response = client.post("/feature-engineering/loans")  #performs request tha is being tested
+    assert response.status_code == 200   #tests if request was successful
     response_data = response.json()
-    first_loan_features = response_data[0]
-    expected_first_loan_features = {
+    first_loan_features = response_data[0]   #retrieves first customer's data
+    expected_first_loan_features = {  #manual computation of feature engineered data
         "index": 0,
         "loan_ID": 10901,
         "customer_ID": 1090,
@@ -63,10 +62,10 @@ def test_feature_engineering_loans(client: TestClient):
         "total_paid": 2625
         }
 
-    assert first_loan_features == expected_first_loan_features
+    assert first_loan_features == expected_first_loan_features  #comparison 
 
 
-def test_get_customer_data(client):
+def test_get_customer_data(client):             #tests if retrieved data for customer 1512 are correct
     customer_data = [{'customer_ID': '1512',
                       'loan_date': '29/03/2021',
                       'amount': '2114',
@@ -88,7 +87,7 @@ def test_get_customer_data(client):
     assert response_data == customer_data
 
 
-def test_health_check(client):
+def test_health_check(client): #tests if request for health check is successful
     response = client.get("/health")
     assert response.status_code == 200
     assert response.json() == {"status": "UP"}
