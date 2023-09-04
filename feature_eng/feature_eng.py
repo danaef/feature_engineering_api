@@ -3,6 +3,8 @@ import pandas as pd
 import json
 
 
+#Takes as input the json data and creates two dataframes out of them, on df with one customer per row and one df with one loan per row.
+#Adds loan_ID as customer_ID plus their number of loan and one hot encodes the loan term
 def preprocess_customer_data(customer_loans):
     customer_data = []
     loan_data = []
@@ -33,6 +35,8 @@ def preprocess_customer_data(customer_loans):
     return pd.DataFrame(customer_data), pd.DataFrame(loan_data)
 
 
+#Creates entity set and relationships, needed by featurestools.
+#runs deep feature synthesis to create relative data for each dataframe and returns them
 def create_entity_set_and_features(customer_df, loan_df):
     dataframes = {
         'customers': (customer_df, 'customer_ID'),
@@ -57,33 +61,34 @@ def create_entity_set_and_features(customer_df, loan_df):
                                                    trans_primitives=['day', 'month', 'year'],
                                                    agg_primitives=[],
                                                    verbose=True)
-    feature_mat_loans.reset_index(drop=False, inplace=True)
+    feature_mat_loans.reset_index(drop=False, inplace=True) #so that the key is not the id 
     feature_mat_customers.reset_index(drop=False, inplace=True)
     return feature_mat_customers, feature_mat_loans
 
 
+#computes some extra features that seemed appropriate
 def extra_feature_engineering(df):
     df_grouped = df.groupby("customer_ID").apply(lambda x: pd.Series({
-        "fee_to_loan_ratio": (x["fee"].sum() / x["amount"].sum()) if x["amount"].sum() > 0 else 0,
-        "loan_to_annual_income": (x["amount"].sum() / x['customers.annual_income'].sum()
+        "fee_to_loan_ratio": (x["fee"].sum() / x["amount"].sum()) if x["amount"].sum() > 0 else 0, #fee to loan ratio
+        "loan_to_annual_income": (x["amount"].sum() / x['customers.annual_income'].sum()      #loan to annual income ratio
                                   ) if x['customers.annual_income'].sum() > 0 else 0
     })).reset_index()
 
     df_grouped["total_debt"] = df_grouped.apply(lambda x: (
-            df[(df["customer_ID"] == x["customer_ID"]) & df["loan_status"]]["amount"].sum() +
+            df[(df["customer_ID"] == x["customer_ID"]) & df["loan_status"]]["amount"].sum() +   #total debt: sum of loan amount plus fees for all active loans
             df[(df["customer_ID"] == x["customer_ID"]) & df["loan_status"]]["fee"].sum()
     ) if x["customer_ID"] in df[df["loan_status"]]["customer_ID"].values else 0, axis=1)
 
     df_grouped["total_paid"] = df_grouped.apply(lambda x: (
-            df[(df["customer_ID"] == x["customer_ID"]) & ~df["loan_status"]]["amount"].sum() +
+            df[(df["customer_ID"] == x["customer_ID"]) & ~df["loan_status"]]["amount"].sum() + # total paid: sum of loan amound plus fees for all inactive loans
             df[(df["customer_ID"] == x["customer_ID"]) & ~df["loan_status"]]["fee"].sum()
     ) if x["customer_ID"] in df[~df["loan_status"]]["customer_ID"].values else 0, axis=1)
 
     merged_df = df.join(df_grouped.set_index('customer_ID'), on='customer_ID', how='left')
-    merged_df.reset_index(drop=False, inplace=True)
     return merged_df
 
 
+#Combination of the above function to create one final that does everything and returns one json with feature engineered data
 def feature_engineering_final(json_data):
     customer_df, loan_df = preprocess_customer_data(json_data)
     feature_mat_customers, feature_mat_loans = create_entity_set_and_features(customer_df, loan_df)
