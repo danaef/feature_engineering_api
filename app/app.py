@@ -1,5 +1,5 @@
 from feature_eng.feature_eng import feature_engineering_final
-from fastapi import FastAPI, HTTPException, Path, Body
+from fastapi import FastAPI, HTTPException
 import json
 
 app = FastAPI()
