@@ -4,7 +4,7 @@ import json
 
 app = FastAPI()
 
-json_path = 'feature_eng/cvas_data.json'
+json_path = 'data/cvas_data.json'
 with open(json_path, 'r') as json_file:
     json_data = json.load(json_file)['data']
 
