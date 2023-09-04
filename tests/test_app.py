@@ -44,7 +44,6 @@ def test_feature_engineering_loans(client: TestClient):
     response_data = response.json()
     first_loan_features = response_data[0]   #retrieves first customer's data
     expected_first_loan_features = {  #manual computation of feature engineered data
-        "index": 0,
         "loan_ID": 10901,
         "customer_ID": 1090,
         "amount": 2426,
